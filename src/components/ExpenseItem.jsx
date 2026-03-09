@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ExpenseItem = React.memo(({ expense, onDelete, currency }) => {
+const ExpenseItem = React.memo(({ expense, onDelete, currency, exchangeRate }) => {
     // A mock date placeholder since the API payload only has title/amount
     const mockDate = "Recent Transaction";
 
@@ -16,7 +16,7 @@ const ExpenseItem = React.memo(({ expense, onDelete, currency }) => {
                 </div>
             </div>
 
-            <span className="expense-amount">{currency}{Number(expense.amount).toFixed(2)}</span>
+            <span className="expense-amount">{currency}{(Number(expense.amount) * exchangeRate).toFixed(2)}</span>
 
             <button
                 className="btn-delete"

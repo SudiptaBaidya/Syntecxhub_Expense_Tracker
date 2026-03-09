@@ -2,9 +2,25 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ExpenseForm from './components/ExpenseForm.jsx';
 import ExpenseList from './components/ExpenseList.jsx';
 
+const exchangeRates = {
+    '$': 1,
+    '€': 0.92,
+    '£': 0.79,
+    '₹': 83.0,
+    '¥': 150.0
+};
+
 function App() {
-    const [expenses, setExpenses] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [expenses, setExpenses] = useState(() => {
+        // Retrieve local storage initially, or fallback to an empty array
+        const savedExpenses = localStorage.getItem('expense_tracker_data');
+        if (savedExpenses) {
+            return JSON.parse(savedExpenses);
+        } else {
+            return [];
+        }
+    });
+    const [isLoading, setIsLoading] = useState(false); // No loading state needed since localStorage is synchronous
 
     // New States for Customization
     const [currency, setCurrency] = useState('$');
@@ -15,33 +31,15 @@ function App() {
         document.body.setAttribute('data-theme', theme);
     }, [theme]);
 
-    // Initial Fetch Effect
+    // Save to LocalStorage whenever 'expenses' state changes
     useEffect(() => {
-        const fetchInitialData = async () => {
-            try {
-                const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=3');
-                const data = await response.json();
-
-                const formattedData = data.map((item) => ({
-                    id: item.id.toString(),
-                    title: item.title.substring(0, 15),
-                    amount: Math.floor(Math.random() * 100) + 10
-                }));
-
-                setExpenses(formattedData);
-            } catch (error) {
-                console.error("Failed to fetch initial expenses:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchInitialData();
-    }, []);
+        localStorage.setItem('expense_tracker_data', JSON.stringify(expenses));
+    }, [expenses]);
 
     const totalExpense = useMemo(() => {
-        return expenses.reduce((total, expense) => total + Number(expense.amount), 0);
-    }, [expenses]);
+        const baseTotal = expenses.reduce((total, expense) => total + Number(expense.amount), 0);
+        return baseTotal * exchangeRates[currency];
+    }, [expenses, currency]);
 
     const deleteExpense = useCallback((id) => {
         setExpenses((prevExpenses) => prevExpenses.filter(expense => expense.id !== id));
@@ -51,9 +49,9 @@ function App() {
         const newExpense = {
             id: Date.now().toString(),
             title,
-            amount: Number(amount)
+            // Store in base USD equivalent so that switching currencies scales properly
+            amount: Number(amount) / exchangeRates[currency]
         };
-
         setExpenses((prevExpenses) => [newExpense, ...prevExpenses]);
     };
 
@@ -110,7 +108,7 @@ function App() {
                     <span>Loading securely...</span>
                 </div>
             ) : (
-                <ExpenseList expenses={expenses} onDeleteExpense={deleteExpense} currency={currency} />
+                <ExpenseList expenses={expenses} onDeleteExpense={deleteExpense} currency={currency} exchangeRate={exchangeRates[currency]} />
             )}
         </div>
     );

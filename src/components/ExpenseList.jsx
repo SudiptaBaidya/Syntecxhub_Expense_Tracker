@@ -1,7 +1,7 @@
 import React from 'react';
 import ExpenseItem from './ExpenseItem.jsx';
 
-function ExpenseList({ expenses, onDeleteExpense, currency }) {
+function ExpenseList({ expenses, onDeleteExpense, currency, exchangeRate }) {
     return (
         <div className="expense-list-container">
             <h3 className="expense-list-header">
@@ -22,6 +22,7 @@ function ExpenseList({ expenses, onDeleteExpense, currency }) {
                             expense={expense}
                             onDelete={onDeleteExpense}
                             currency={currency}
+                            exchangeRate={exchangeRate}
                         />
                     ))}
                 </ul>
